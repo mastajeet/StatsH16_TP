@@ -1,8 +1,7 @@
 import actuariat as act
 import scipy.optimize as optimize
-import sympy.stats as stt
+import scipy.stats.distributions as stt
 import numpy as np
-
 
 
 # Question 1 :
@@ -17,7 +16,7 @@ print(weibull_score.score_alpha)
 print(weibull_score.score_beta)
 
 # c) utiliser une fonction d'optimisation pour trouver les estimateurs MV
-print(optimize.minimize(weibull_score.negative_likelyhood_function(),[1,3],method="TNC",bounds=((0,10),(0,10))))
+print(optimize.minimize(weibull_score.negative_likelyhood_function(),[1,3],method='Nelder-Mead'))
 weibull_score.loglikelyhood_function()([1,2])
 
 # d) Construire un itérateur pour executer la méthode newton rhapson
@@ -26,4 +25,9 @@ a = weibull_score.loglikelyhood_function()
 
 #Partie 1 : Question 2
 import helper as hlp
-apple = hlp.yf_yield_extractor("C:\\Users\jtbai\Downloads\\apple_daily.csv",number_datapoint=150)
+r_apple = hlp.yf_log_yield_extractor("./data/apple_daily.csv",number_datapoint=150)
+r_apple.to_excel('./output/log_yield_apple.xlsx')
+
+student_t = act.random_variable(sample= np.exp(list(r_apple['Yield'][:2])),distribution=stt.t.pdf)
+optimisation = optimize.minimize(student_t.optimisable_function,[2,2,2],method='Nelder-Mead')
+optimisation.x #degree of freedom, mean, variance
