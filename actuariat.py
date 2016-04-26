@@ -68,26 +68,25 @@ class poisson_chi_carre:
     beta = 0
     sample = []
     sub_sample_y = []
-    sub_sample_mean = []
-    sub_sample_variance = []
 
-    def __init__(self, lmbd, alpha, beta):
+    def __init__(self):
+        self.sample = []
+        self.sub_sample_y = np.array([])
+
+    def set_params(self, lmbd, alpha, beta):
         self.lmbd = lmbd
         self.alpha = alpha
         self.beta = beta
-        self.sample = []
-        self.sub_sample_mean = np.array([])
-        self.sub_sample_variance = np.array([])
-        self.sub_sample_y = np.array([])
 
     def simulate(self, n):
         poisson = randdist.poisson(self.lmbd, n)
         for nb_variables in poisson:
             sub_sample = randdist.gamma(self.alpha, self.beta, int(nb_variables))
-            self.sub_sample_mean = np.hstack((self.sub_sample_mean, np.mean(sub_sample)))
-            self.sub_sample_variance = np.hstack((self.sub_sample_variance, np.var(sub_sample, ddof=1)))
             self.sub_sample_y = np.hstack((self.sub_sample_y, np.sum(sub_sample)))
             self.sample.append(sub_sample)
+
+    def set_data(self,data):
+        self.sub_sample_y = np.array(list(data))
 
     def expected_value(self):
         return np.mean(self.sub_sample_y)
@@ -151,3 +150,55 @@ class quasi_likelyhood:
             1 / (2 * 3.141592654) * 1 / (np.sqrt(self.quasi_variance(params))) * np.exp(
                 -1 * (self.sample - self.quasi_mean(params)) ** 2 / (self.quasi_variance(params)))
         ))
+
+class poisson_jump_diffusion:
+    sample = []
+    lmbda = 0
+
+    mu_jump = 0
+    sigma_jump = 0
+
+    mu_yield = 0
+    sigma_yield = 0
+
+    sub_sample_y = []
+    sub_sample_mean = []
+    sub_sample_variance = []
+
+    def __init__(self):
+
+        self.sub_sample_mean = np.array([])
+        self.sub_sample_variance = np.array([])
+        self.sub_sample_y = np.array([])
+
+    def set_params(self, lmbd, mu_jump, sigma_jump, mu_yield, sigma_yield):
+        self.lmbda = lmbd
+        self.mu_jump = mu_jump
+        self.sigma_jump = sigma_jump
+        self.mu_yield = mu_yield
+        self.sigma_yield = sigma_yield
+
+    def simulate(self, n):
+        poisson = randdist.poisson(self.lmbd, n)
+        for nb_variables in poisson:
+            baseline_yield = randdist.normal(self.mu_yield, self.sigma_yield, 1)
+            sub_sample = randdist.normal(self.mu_jump, self.sigma_jump, int(nb_variables))
+            self.sub_sample_y = np.hstack((self.sub_sample_y, np.sum(sub_sample)+baseline_yield))
+            self.sample.append(np.array([baseline_yield,sub_sample]))
+
+    def set_data(self,data):
+        self.sub_sample_y = np.array(list(data))
+
+    def expected_value(self):
+        return np.mean(self.sub_sample_y)
+
+    def variance(self):
+        return np.var(self.sub_sample_y)
+
+    def theoritical_mean(params):
+        # in order: lambda, mu_yield, sigma_yield, mu_jump, sigma_jump
+        return params[1] + params[0] * params[3]
+
+    def theoritical_variance(params):
+        # in order: lambda, alpha, beta
+        return params[2]**2 + params[0] * (params[3]**2+params[4]**2)

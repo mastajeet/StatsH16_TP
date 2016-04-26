@@ -1,4 +1,7 @@
+from matplotlib.pyplot import hist
+
 import actuariat as act
+import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import scipy.stats.distributions as stt
 import numpy as np
@@ -28,6 +31,17 @@ import helper as hlp
 r_apple = hlp.yf_log_yield_extractor("./data/apple_daily.csv",number_datapoint=150)
 r_apple.to_excel('./output/log_yield_apple.xlsx')
 
-student_t = act.random_variable(sample= np.exp(list(r_apple['Yield'][:2])),distribution=stt.t.pdf)
-optimisation = optimize.minimize(student_t.optimisable_function,[2,2,2],method='Nelder-Mead')
-optimisation.x #degree of freedom, mean, variance
+r_apple.sort(columns='Yield')
+
+student_t = act.random_variable(sample=list(r_apple['Yield']), distribution=stt.t.pdf)
+optimisation = optimize.minimize(student_t.optimisable_function,[10,np.mean(r_apple['Yield']),np.std(r_apple['Yield'])],method='Nelder-Mead')
+parameters_max_vrais = optimisation.x #degree of freedom, mean, variance
+
+# Faire les graphiques
+histogramme = plt.hist(r_apple['Yield'], label='Apple Log-Yield',color='g')
+line1 = plt.plot(histogramme[1],stt.norm.pdf(histogramme[1],np.mean(r_apple['Yield']),np.std(r_apple['Yield'])),'-x',color='k',label='Normal distribution')
+line2 = plt.plot(histogramme[1],stt.t.pdf(histogramme[1],parameters_max_vrais[0],parameters_max_vrais[1],parameters_max_vrais[2]),'-o',color='r',label='Student-T Distribution')
+plt.legend(['Normal Distribution','Student-T distribution'])
+plt.title('Apple Log-Yield vs distributions')
+
+
