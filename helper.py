@@ -25,3 +25,6 @@ def yf_log_yield_extractor(path, *, number_datapoint=None):
     prices = yf_price_extractor(path, number_datapoint=number_datapoint)
     return fin.log_yield_calculator(prices)
 
+def wrap_regression_results(all_results,results):
+    all_results[results.model.formula] = {'log':results.llf,'degree_of_freedom':results.df_model}
+    return True
