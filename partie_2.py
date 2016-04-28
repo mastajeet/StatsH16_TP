@@ -87,3 +87,5 @@ print(optimisation.x)
 # [ 0.02404472 -0.00029647  0.00030939  0.00313     0.15468654]
 
 # d)
+
+# commentaire integre ici
