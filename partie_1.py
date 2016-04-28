@@ -44,4 +44,4 @@ line2 = plt.plot(histogramme[1],stt.t.pdf(histogramme[1],parameters_max_vrais[0]
 plt.legend(['Normal Distribution','Student-T distribution'])
 plt.title('Apple Log-Yield vs distributions')
 
-
+# commentaire ici!!!
