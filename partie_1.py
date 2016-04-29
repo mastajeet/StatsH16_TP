@@ -43,5 +43,3 @@ line1 = plt.plot(histogramme[1],stt.norm.pdf(histogramme[1],np.mean(r_apple['Yie
 line2 = plt.plot(histogramme[1],stt.t.pdf(histogramme[1],parameters_max_vrais[0],parameters_max_vrais[1],parameters_max_vrais[2]),'-o',color='r',label='Student-T Distribution')
 plt.legend(['Normal Distribution','Student-T distribution'])
 plt.title('Apple Log-Yield vs distributions')
-
-# commentaire ici!!!
