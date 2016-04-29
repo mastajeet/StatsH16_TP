@@ -75,8 +75,8 @@ class poisson_chi_carre:
 
     def set_params(self, lmbd, alpha, beta):
         self.lmbd = lmbd
-        self.alpha = alpha
         self.beta = beta
+        self.alpha = alpha
 
     def simulate(self, n):
         poisson = randdist.poisson(self.lmbd, n)
@@ -84,6 +84,38 @@ class poisson_chi_carre:
             sub_sample = randdist.gamma(self.alpha, self.beta, int(nb_variables))
             self.sub_sample_y = np.hstack((self.sub_sample_y, np.sum(sub_sample)))
             self.sample.append(sub_sample)
+
+    def fgm(self):
+        return lambda s: np.exp(self.lmda * ((1-self.beta*s)**(-self.alpha)-1))
+
+    def cdf(self,x):
+        edgeworth = edgeworth_expansion(self.sub_sample_y)
+        return edgeworth.F_x(x,2)
+
+    def limited_expectation(self,x):
+        # "G" function moments (based on its moment generating function)
+        # Using local variable only to lighten the code
+        beta = self.beta
+        alpha = self.alpha
+        lmbd = self. lmbd
+
+        mean_sub_sample = np.mean(self.sub_sample_y)
+
+
+        m_1 = alpha**2*(1/beta)**2*lmbd**2 + alpha**2*(1/beta)**2*lmbd + alpha*(1/beta)**2*lmbd/mean_sub_sample
+        m_2 = alpha*(1/beta)**3*lmbd*(alpha**2*lmbd**2 + 3*alpha**2*lmbd + alpha**2 + 3*alpha*lmbd + 3*alpha + 2)/mean_sub_sample
+        m_3 = alpha*(1/beta)**4*lmbd*(alpha**3*lmbd**3 + 6*alpha**3*lmbd**2 + 7*alpha**3*lmbd + alpha**3 - 6*alpha**2*lmbd**2 - 18*alpha**2*lmbd - 6*alpha**2 + 11*alpha*lmbd + 11*alpha - 6)/mean_sub_sample
+
+        mean = m_1
+        variance = m_2 - m_1**2
+        skewness = (m_3 - 3*m_1*variance - m_1**3) / (variance**3/2)
+        edgeworth = edgeworth_expansion(self.sub_sample_y)
+        edgeworth.set_statistics(mean,variance,skewness)
+
+        print('first',edgeworth.F_x(x,1))
+        print('second',self.cdf(x))
+
+        return mean_sub_sample*(1-edgeworth.F_x(x,1)) - x*(1-self.cdf(x))
 
     def set_data(self,data):
         self.sub_sample_y = np.array(list(data))
@@ -108,19 +140,29 @@ class edgeworth_expansion:
 
     def __init__(self, sample):
         self.sample = sample
+        self.set_statistics(np.mean(sample),np.var(sample),stt.skew(sample),stt.kurtosis(sample))
 
     def get_cumulants(self, x):
-        self.C1 = stt.skew(self.sample) / 6
-        self.C2 = stt.kurtosis(self.sample) / 24
+        self.C1 = self.skewness / 6
+        self.C2 = self.kurtosis / 24
         self.C3 = self.C1 ** 2 / 72
         self.P1 = (1 - x ** 2)
         self.P2 = 3 * x - x ** 3
         self.P3 = 10 * x ** 3 - 15 * x - x ** 5
 
-    def F_x(self, x):
-        x = np.sqrt(len(self.sample)) * (x - np.mean(self.sample)) / np.var(self.sample)
+    def set_statistics(self,mean=0,variance=0,skewness=0,kurtosis=0):
+        self.mean = mean
+        self.variance = variance
+        self.skewness = skewness
+        self.kurtosis = kurtosis
+
+    def F_x(self, x, nb_terms = 1):
+        x = (x - self.mean) / np.sqrt(self.variance)
         self.get_cumulants(x)
-        return stt.norm.cdf(x) + (self.C1 * self.P1 * stt.norm.pdf(x)) / np.sqrt(len(self.sample)) + (
+        if nb_terms==1:
+            return stt.norm.cdf(x) + (self.C1 * self.P1 * stt.norm.pdf(x)) / np.sqrt(len(self.sample))
+        if nb_terms==2:
+            return stt.norm.cdf(x) + (self.C1 * self.P1 * stt.norm.pdf(x)) / np.sqrt(len(self.sample)) + (
                                                                                                      self.C2 * self.P2 + self.C3 * self.P3) / len(
             self.sample) * stt.norm.pdf(x)
 

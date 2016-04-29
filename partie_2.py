@@ -48,9 +48,15 @@ print(inspect.getsource(poisson_chi_carre_quasi_likelyhood.get_quasi_score))
 optimisation = opt.minimize(poisson_chi_carre_quasi_likelyhood.get_quasi_score_to_minimise,[10,0.5,2],method='Nelder-Mead')
 print(optimisation.x)
 
+
 # d) trouver la prime stoploss
-edgeworth = act.edgeworth_expansion(experiment.sub_sample_y)
-edgeworth.F_x(10)
+experiment.set_params(optimisation.x[0],optimisation.x[1],optimisation.x[2])
+print(experiment.limited_expectation(1))
+print(experiment.limited_expectation(2))
+print(experiment.limited_expectation(3))
+print(experiment.limited_expectation(4))
+print(experiment.limited_expectation(5))
+
 
 #Section 2: Finance
 
