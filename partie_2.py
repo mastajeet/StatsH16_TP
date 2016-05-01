@@ -93,3 +93,12 @@ print(optimisation.x)
 # [ 0.02404472 -0.00029647  0.00030939  0.00313     0.15468654]
 
 # d)
+x = optimisation.x
+jump_diffusion.set_params(x[0],x[1],x[2],x[3],x[4])
+h = jump_diffusion.find_h(mu_rn)
+# h:-0.28741530702525836
+
+# e)
+# pour F tilted, j'obtiens une variance negative, signe qu'il y a un bogue quelque part.
+# j'ai eu un probleme similaire lors du calcul de la prime stop-loss ou j'ai du passer par une autre technique...
+

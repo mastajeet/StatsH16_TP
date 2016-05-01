@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.stats as stt
+import scipy.integrate as integrate
 import numpy.random as randdist
 
 import scipy.optimize as opt
@@ -78,7 +79,7 @@ class poisson_chi_carre:
         edgeworth = edgeworth_expansion(self.sub_sample_y)
         return edgeworth.F_x(x,2)
 
-    def limited_expectation(self,x):
+    def limited_expectation_using_essher(self,x):
         # "G" function moments (based on its moment generating function)
         # Using local variable only to lighten the code
         beta = self.beta
@@ -98,10 +99,15 @@ class poisson_chi_carre:
         edgeworth = edgeworth_expansion(self.sub_sample_y)
         edgeworth.set_statistics(mean,variance,skewness)
 
-        print('first',edgeworth.F_x(x,1))
-        print('second',self.cdf(x))
-
         return mean_sub_sample*(1-edgeworth.F_x(x,1)) - x*(1-self.cdf(x))
+
+    def limited_expectation(self,x):
+        # Using local variable only to lighten the code
+
+        edgeworth = edgeworth_expansion(self.sub_sample_y)
+        return integrate.quad(lambda x: 1 - edgeworth.F_x(x),x,np.inf)
+
+
 
     def set_data(self,data):
         self.sub_sample_y = np.array(list(data))
@@ -145,10 +151,16 @@ class edgeworth_expansion:
     def F_x(self, x, nb_terms = 1):
         x = (x - self.mean) / np.sqrt(self.variance)
         self.get_cumulants(x)
+        F_x = self.get_F_x(nb_terms)
+        return F_x(x)
+
+
+    def get_F_x(self, nb_terms = 1):
+
         if nb_terms==1:
-            return stt.norm.cdf(x) + (self.C1 * self.P1 * stt.norm.pdf(x)) / np.sqrt(len(self.sample))
+            return lambda x: stt.norm.cdf(x) + (self.C1 * self.P1 * stt.norm.pdf(x)) / np.sqrt(len(self.sample))
         if nb_terms==2:
-            return stt.norm.cdf(x) + (self.C1 * self.P1 * stt.norm.pdf(x)) / np.sqrt(len(self.sample)) + (
+            return lambda x: stt.norm.cdf(x) + (self.C1 * self.P1 * stt.norm.pdf(x)) / np.sqrt(len(self.sample)) + (
                                                                                                      self.C2 * self.P2 + self.C3 * self.P3) / len(
             self.sample) * stt.norm.pdf(x)
 
@@ -213,6 +225,20 @@ class poisson_jump_diffusion:
             sub_sample = randdist.normal(self.mu_jump, self.sigma_jump, int(nb_variables))
             self.sub_sample_y = np.hstack((self.sub_sample_y, np.sum(sub_sample)+baseline_yield))
             self.sample.append(np.array([baseline_yield,sub_sample]))
+
+    def find_h(self,r):
+        mu_jump = self.mu_jump
+        mu_yield =self.mu_yield
+        sigma_jump= self.sigma_jump
+        sigma_yield= self.sigma_yield
+        lmbda= self.lmbda
+
+        return (-lmbda*mu_jump - 0.5*lmbda*sigma_jump**2 - mu_yield + r - 0.5*sigma_yield**2)/(lmbda*sigma_jump**2 + sigma_yield**2)
+
+    def fgm(self,s):
+        def fgm_normale(s,mu,sigma):
+            return mu*s+1/2*sigma**2*s**2
+        return np.exp(fgm_normale(s,self.mu_yield,self.sigma_yield))*np.exp(self.lmbda*(fgm_normale(s,self.mu_jump,self.sigma_jump)))
 
     def set_data(self,data):
         self.sub_sample_y = np.array(list(data))
