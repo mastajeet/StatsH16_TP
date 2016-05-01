@@ -1,11 +1,9 @@
-from matplotlib.pyplot import hist
-
 import actuariat as act
 import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import scipy.stats.distributions as stt
 import numpy as np
-
+import sympy
 
 # Question 1 :
 # Analyser les pertes pour la prime
@@ -15,6 +13,8 @@ experiment = act.weibull()
 experiment.set_params(theta_al['alpha'],theta_al['beta'])
 experiment.simulate(20)
 
+# Reponse
+print(experiment.sample)
 
 # b) trouver les vecteur des fonctions scores
 # partie theorique
@@ -22,9 +22,20 @@ experiment.simulate(20)
 # c) utiliser une fonction d'optimisation pour trouver les estimateurs MV
 optimisation = optimize.minimize(experiment.get_score_to_minimise,[1,3],method='Nelder-Mead')
 print(optimisation.x)
+# {alpha:1.13130645,beta:1.78076148}
 
 # d) Construire un itérateur pour executer la méthode newton rhapson
 # ...
+
+# e) calculer l'esperance
+beta = sympy.symbols('beta')
+alpha = sympy.symbols('alpha')
+y = sympy.symbols('y')
+x = sympy.symbols('x')
+
+f_x = (alpha*beta*y**(beta-1)*sympy.exp(-alpha*y**beta))
+esperance = sympy.integrate(y*f_x,(y,0,sympy.oo))
+esperance.subs({alpha:1.13130645,beta:1.78076148})
 
 
 #Partie 1 : Question 2

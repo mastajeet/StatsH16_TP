@@ -26,7 +26,7 @@ experiment.simulate(q1_number_of_simulation)
 print(experiment.sub_sample_y)
 
 # pour obtenir les valeurs de X, separees par Y
-print(experiment.sample)
+# print(experiment.sample)
 
 
 # b) trouver E[Y] et V[Y] et Q(theta)
@@ -71,7 +71,7 @@ jump_diffusion_quasi_likelyhood.set_variance_function(act.poisson_jump_diffusion
 
 # b)
 mu = np.mean(r_apple)
-sigma = np.var(r_apple)
+sigma = np.std(r_apple)
 
 T = 30
 mu_projete = mu
@@ -80,12 +80,12 @@ sigma_projete = sigma
 rf = 30/3650
 mu_rn = rf-sigma_projete/T
 
-S0 = p_apple.iloc[0]
+S0 = 120
 K = np.array([115,120,125,130,135])
 T = 30
 
 c_black_scholes = fin.black_scholes('C',S0, K, mu_rn, sigma_projete, T)
-# array([18.76479768,  14.85631045,  10.94782322,   7.03933599,   3.13084875])
+# array([ 17.36619562,  13.62334634,  10.16609264,   7.15437004,   4.71612542])
 
 # c)
 optimisation = opt.minimize(jump_diffusion_quasi_likelyhood.get_quasi_score_to_minimise,[1,jump_diffusion.expected_value(),jump_diffusion.variance(),0.1,0.1],method='Nelder-Mead')
@@ -101,4 +101,5 @@ h = jump_diffusion.find_h(mu_rn)
 # e)
 # pour F tilted, j'obtiens une variance negative, signe qu'il y a un bogue quelque part.
 # j'ai eu un probleme similaire lors du calcul de la prime stop-loss ou j'ai du passer par une autre technique...
+
 

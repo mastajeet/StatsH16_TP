@@ -16,8 +16,11 @@ data['claim_rate'] = data['n']/data['y']
 # a)
 
 plt.scatter(data['age'],data['claim_rate'],c='b',marker='o')
+plt.title('Age Category vs Claim Rate')
 plt.scatter(data['car'],data['claim_rate'],c='r',marker='+')
+plt.title('Car Category vs Claim Rate')
 plt.scatter(data['dist'],data['claim_rate'],c='g',marker='x')
+plt.title('District vs Claim Rate')
 
 # b)
 all_results = defaultdict(dict)
@@ -65,12 +68,21 @@ degree_of_freedom = test_results.df_model - best_results_b.df_model
 if deviance < dist.chi2.ppf(0.95,degree_of_freedom):
     print('test_regression_c est rejete pour best_regression_b')
 
-# les donnes n'expliquent pas grand chose....
 
 
 # Finance
+# a)
 r_royal = helper.yf_log_yield_extractor('./data/royalbank_monthly.csv',number_datapoint=30)
-plt.scatter(r_royal['Yield'][1:30]**2,r_royal['Yield'][:29]**2)
+r_royal.to_excel('./output/log_yield_royalbank.xlsx')
+
+# b)
+plt.scatter([x for x in range(30)],r_royal['Yield']**2)
+plt.title('Yield squared vs Time')
+
+# c)
+plt.scatter([x for x in range(30)],r_royal['Yield'])
+plt.title('Yield vs Time')
+
 
 mu = np.mean(r_royal['Yield'])
 
@@ -84,4 +96,12 @@ results.summary()
 
 h31 = results.predict((1,y[0]))[0]
 h32 = results.predict((1,h31))[0]
+
+
+
+
+
+
+
+
 
